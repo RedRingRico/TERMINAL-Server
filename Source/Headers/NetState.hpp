@@ -1,4 +1,4 @@
-#ifndef __TERMIANL_NETSTATE_HPP__
+#ifndef __TERMINAL_NETSTATE_HPP__
 #define __TERMINAL_NETSTATE_HPP__
 
 #include <DataTypes.hpp>

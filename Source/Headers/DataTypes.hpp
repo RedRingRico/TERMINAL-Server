@@ -27,6 +27,8 @@ namespace TERMINAL
 	const T_MEMSIZE T_SIZEOF_FLOAT32 = sizeof( T_FLOAT32 );
 	const T_MEMSIZE T_SIZEOF_MEMSIZE = sizeof( T_MEMSIZE );
 	const T_MEMSIZE T_SIZEOF_BYTE = sizeof( T_BYTE );
+
+	const int T_INVALID_SOCKET = -1;
 }
 
 #endif // __TERMINAL_DATATYPES_HPP__
