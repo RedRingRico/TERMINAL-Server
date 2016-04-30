@@ -3,6 +3,7 @@
 
 #include <DataTypes.hpp>
 #include <NetState.hpp>
+#include <string>
 
 namespace TERMINAL
 {
@@ -11,6 +12,9 @@ namespace TERMINAL
 	const T_SINT8 TMESSAGE_ADDCLIENT	= -102;
 	const T_SINT8 TMESSAGE_REMOVECLIENT	= -103;
 	const T_SINT8 TMESSAGE_PING			= -104;
+
+	const T_UINT32 PACKET_TYPE_LISTREQUEST = 0x000100;
+	const T_UINT32 PACKET_TYPE_LISTRESPONSE = 0x000101;
 
 	// Forward declarations
 	class NetClient;
@@ -21,9 +25,11 @@ namespace TERMINAL
 	{
 	public:
 		NetMessage( T_BYTE *p_pBuffer, const T_MEMSIZE p_Length );
+		NetMessage( const NetMessage &p_Other );
 		~NetMessage( );
 
 		void Clear( );
+		void Reset( const T_MEMSIZE p_Length );
 		void AddSequences( NetClient *p_pClient );
 
 		void Write( const void *p_pData, const T_MEMSIZE p_Length );
@@ -48,9 +54,12 @@ namespace TERMINAL
 		// Must be a null-terminated string
 		void ReadString( char *p_pString );
 		void ReadString( char *p_pString, const T_MEMSIZE p_Length );
+		void ReadString( std::string &p_String );
 
 		bool GetOverflow( ) const;
 		T_MEMSIZE GetSize( ) const;
+
+		const T_BYTE *GetBuffer( ) const;
 		
 	private:
 		T_UINT32 CopyToInternalBuffer( const void *p_pSource,
@@ -64,6 +73,7 @@ namespace TERMINAL
 		T_MEMSIZE	m_Size;
 		T_MEMSIZE	m_ReadPosition;
 		T_BYTE		*m_pData;
+		bool		m_InternalBuffer;
 	};
 }
 

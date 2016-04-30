@@ -10,17 +10,47 @@ namespace TERMINAL
 		m_MaxSize( p_Length ),
 		m_Size( 0 ),
 		m_ReadPosition( 0 ),
-		m_pData( p_pBuffer )
+		m_pData( p_pBuffer ),
+		m_InternalBuffer( false )
 	{
+		if( p_pBuffer == nullptr )
+		{
+			m_pData = new T_BYTE[ p_Length ];
+			m_InternalBuffer = true;
+		}
+	}
+
+	NetMessage::NetMessage( const NetMessage &p_Other ) :
+		m_Overflow( p_Other.m_Overflow ),
+		m_MaxSize( p_Other.m_MaxSize ),
+		m_Size( p_Other.m_Size ),
+		m_ReadPosition( p_Other.m_ReadPosition ),
+		m_InternalBuffer( true )
+	{
+		m_pData = new T_BYTE[ m_MaxSize ];
+		memcpy( m_pData, p_Other.m_pData, m_MaxSize );
+		std::cout << "Created message buffer of " << m_MaxSize << " bytes" <<
+			std::endl;
 	}
 
 	NetMessage::~NetMessage( )
 	{
-		// Nothing to do
+		if( m_InternalBuffer )
+		{
+			delete [ ] m_pData;
+		}
 	}
 
 	void NetMessage::Clear( )
 	{
+		m_Size = 0;
+		m_ReadPosition = 0;
+		m_Overflow = false;
+	}
+
+	void NetMessage::Reset( const T_MEMSIZE p_Length )
+	{
+		m_MaxSize = p_Length;
 		m_Size = 0;
 		m_ReadPosition = 0;
 		m_Overflow = false;
@@ -173,6 +203,23 @@ namespace TERMINAL
 		}
 	}
 
+	void NetMessage::ReadString( std::string &p_String )
+	{
+		T_BYTE StringLength = this->ReadByte( );
+
+		if( StringLength > 0 )
+		{
+			char Buffer[ StringLength ];
+			this->Read( Buffer, StringLength );
+
+			p_String = Buffer;
+		}
+		else
+		{
+			p_String = "";
+		}
+	}
+
 	bool NetMessage::GetOverflow( ) const
 	{
 		return m_Overflow;
@@ -181,6 +228,11 @@ namespace TERMINAL
 	T_MEMSIZE NetMessage::GetSize( ) const
 	{
 		return m_Size;
+	}
+
+	const T_BYTE *NetMessage::GetBuffer( ) const
+	{
+		return m_pData;
 	}
 
 	T_UINT32 NetMessage::CopyToInternalBuffer( const void *p_pSource,
@@ -229,7 +281,7 @@ namespace TERMINAL
 			m_Overflow = true;
 		}
 
-		pBuffer = m_pData + p_Length;
+		pBuffer = m_pData + m_Size;
 		m_Size += p_Length;
 
 		return pBuffer;
