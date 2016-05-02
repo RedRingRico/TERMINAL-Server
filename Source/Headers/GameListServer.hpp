@@ -3,6 +3,7 @@
 
 #include <NetServer.hpp>
 #include <vector>
+#include <microhttpd.h>
 
 namespace TERMINAL
 {
@@ -14,19 +15,6 @@ namespace TERMINAL
 	};
 
 	typedef std::vector< GAME_SERVER > ServerList;
-
-	/*class GameList
-	{
-	public:
-		GameList( );
-		GameList( const GameList &p_Original );
-		~GameList( );
-
-		int GetPageCount( ) const;
-
-	private:
-		ServerList	m_ServerList;
-	};*/
 
 	class GameListServer : public NetServer
 	{
@@ -41,8 +29,11 @@ namespace TERMINAL
 		void SendServerListPacket( const NetSocketAddress &p_Address,
 			ServerList::const_iterator p_StartPoint );
 
-		T_UINT32	m_ClientToken;
-		ServerList	m_ServerList;
+		void UpdateWebPage( );
+
+		T_UINT32			m_ClientToken;
+		ServerList			m_ServerList;
+		struct MHD_Daemon	*m_pDaemonHTTP;
 	};
 }
 

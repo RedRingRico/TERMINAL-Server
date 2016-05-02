@@ -74,7 +74,7 @@ SYSIPATH	=
 INCPATH		=
 SYSLPATH	=	
 LIBPATH		=
-SYSLIBS		=	-lrt -pthread
+SYSLIBS		=	-lrt -pthread -lmicrohttpd
 LINKFLAGS	=
 
 ##### Debug #######
