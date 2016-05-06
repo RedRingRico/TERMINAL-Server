@@ -12,6 +12,8 @@ namespace TERMINAL
 	typedef uint16_t	T_UINT16;
 	typedef int32_t		T_SINT32;
 	typedef uint32_t	T_UINT32;
+	typedef int64_t		T_SINT64;
+	typedef uint64_t	T_UINT64;
 	typedef float		T_FLOAT32;
 
 	typedef size_t		T_MEMSIZE;
