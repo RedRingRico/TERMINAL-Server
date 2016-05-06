@@ -113,6 +113,21 @@ namespace TERMINAL
 		}
 	}
 
+	void NetMessage::WriteString( const std::string &p_String )
+	{
+		if( p_String.size( ) > 255 )
+		{
+			std::cout << "Cannot write string, it's greater than 255 bytes in "
+				"size" << std::endl;
+
+			return;
+		}
+
+		this->WriteByte( p_String.size( ) + 1 );
+		this->Write( p_String.data( ), p_String.size( ) );
+		this->WriteByte( '\0' );
+	}
+
 	void NetMessage::BeginReading( )
 	{
 		m_ReadPosition = 0;

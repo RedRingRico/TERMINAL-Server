@@ -1,4 +1,4 @@
-#ifndef __TERMIANL_NETMESSAGE_HPP__
+#ifndef __TERMINAL_NETMESSAGE_HPP__
 #define __TERMINAL_NETMESSAGE_HPP__
 
 #include <DataTypes.hpp>
@@ -13,8 +13,9 @@ namespace TERMINAL
 	const T_SINT8 TMESSAGE_REMOVECLIENT	= -103;
 	const T_SINT8 TMESSAGE_PING			= -104;
 
-	const T_UINT32 PACKET_TYPE_LISTREQUEST = 0x000100;
-	const T_UINT32 PACKET_TYPE_LISTRESPONSE = 0x000101;
+	const T_UINT32 PACKET_TYPE_LISTREQUEST		= 0x00000100;
+	const T_UINT32 PACKET_TYPE_LISTRESPONSE		= 0x00000101;
+	const T_UINT32 PACKET_TYPE_REGISTERSERVER	= 0x00011100;
 
 	// Forward declarations
 	class NetClient;
@@ -42,6 +43,7 @@ namespace TERMINAL
 		// Must be a null-terminated string
 		void WriteString( const char *p_pString );
 		void WriteString( const char *p_pString, const T_MEMSIZE p_Length );
+		void WriteString( const std::string &p_String );
 
 		void BeginReading( );
 		void Read( void *p_pData, const T_MEMSIZE p_Length );
