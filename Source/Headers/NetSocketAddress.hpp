@@ -20,6 +20,9 @@ namespace TERMINAL
 
 		size_t GetHash( ) const;
 
+		T_UINT32 GetIP( ) const;
+		T_UINT16 GetPort( ) const;
+
 		bool operator==( const NetSocketAddress &p_Other ) const;
 
 	private:

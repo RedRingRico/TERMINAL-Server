@@ -15,8 +15,8 @@ namespace TERMINAL
 		const T_UINT16 p_Port )
 	{
 		this->GetAsSockAddrIn( )->sin_family = AF_INET;
-		this->GetAsSockAddrIn( )->sin_addr.s_addr = p_Address;// htonl( p_Address );
-		this->GetAsSockAddrIn( )->sin_port = htons( p_Port );
+		this->GetAsSockAddrIn( )->sin_addr.s_addr = p_Address;
+		this->GetAsSockAddrIn( )->sin_port = p_Port;
 	}
 
 	NetSocketAddress::NetSocketAddress( const struct sockaddr &p_SockAddr )
@@ -35,6 +35,16 @@ namespace TERMINAL
 			( ( static_cast< uint32_t >(
 				GetAsSockAddrIn( )->sin_port ) ) << 13 ) |
 			m_SockAddr.sa_family );
+	}
+
+	T_UINT32 NetSocketAddress::GetIP( ) const
+	{
+		return this->GetAsSockAddrIn( )->sin_addr.s_addr;
+	}
+
+	T_UINT16 NetSocketAddress::GetPort( ) const
+	{
+		return this->GetAsSockAddrIn( )->sin_port;
 	}
 
 	bool NetSocketAddress::operator==( const NetSocketAddress &p_Other ) const
