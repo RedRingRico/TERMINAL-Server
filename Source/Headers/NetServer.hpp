@@ -25,7 +25,7 @@ namespace TERMINAL
 		NetServer( );
 		virtual ~NetServer( );
 
-		T_UINT32 Initialise( const std::string &p_Address );
+		virtual T_UINT32 Initialise( const std::string &p_Address );
 		void Terminate( );
 
 		void SendPing( );
@@ -40,7 +40,7 @@ namespace TERMINAL
 		/*virtual void ProcessPacket( NetProxyClientPtr p_ProxyClient,
 			NetMessage &p_Message ) = 0;*/
 
-		T_UINT32 Update( const T_UINT32 p_TimeDelta,
+		virtual T_UINT32 Update( const T_UINT32 p_TimeDelta,
 			struct timeval *p_pTimeOut );
 
 		void SendPackets( );
@@ -54,6 +54,7 @@ namespace TERMINAL
 			IDToClientMap;
 
 		IDToClientMap					m_IDToClientMap;
+		NetSocketUDPPtr					m_Socket;
 
 	private:
 		class ReceivedPacket
@@ -74,7 +75,6 @@ namespace TERMINAL
 		T_SINT32 CheckForTimeOut( void *p_pData, struct sockaddr *p_pFrom );
 		
 		T_UINT16						m_Port;
-		NetSocketUDPPtr					m_Socket;
 		bool							m_Initialised;
 		std::vector< NetSocketUDPPtr >	m_ReadSockets;
 		std::vector< NetSocketUDPPtr >	m_ReadableSockets;

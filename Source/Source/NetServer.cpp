@@ -18,13 +18,6 @@ namespace TERMINAL
 
 	T_UINT32 NetServer::Initialise( const std::string &p_Address )
 	{
-		m_Socket = CreateUDPSocket( SOCKET_ADDRESS_FAMILY_INET );
-
-		// The IP address should be user-modifiable via a configuration file
-		NetSocketAddress Address( INADDR_ANY, 50001 );
-
-		m_Socket->Bind( Address );
-
 		m_Initialised = true;
 
 		return 0;
@@ -110,6 +103,9 @@ namespace TERMINAL
 				this->ProcessMessage( pData, SockAddr );*/
 			}
 		}
+
+		this->ProcessIncomingPackets( );
+
 
 		return 0;
 	}
