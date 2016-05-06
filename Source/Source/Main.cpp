@@ -1,6 +1,8 @@
 #include <iostream>
 #include <GitVersion.hpp>
 #include <GameListServer.hpp>
+#include <GameServer.hpp>
+#include <Time.hpp>
 #include <unistd.h>
 
 // Move this later
@@ -37,16 +39,24 @@ int main( int p_Argc, char **p_ppArgv )
 	std::cout << "\tLobby" << std::endl;
 	std::cout << "\tGame" << std::endl;
 
-	TERMINAL::GameListServer Server;
+	TERMINAL::GameListServer ListServer;
+	TERMINAL::GameServer GameServer;
 
-	Server.Initialise( "IGNORE" );
+	ListServer.Initialise( "IGNORE" );
+	GameServer.Initialise( "" );
+
+	TERMINAL::T_UINT64 PreviousTime = TERMINAL::GetTimeInMicroseconds( );
 
 	while( KeyPress( ) == -1 )
 	{
-		Server.ProcessIncomingPackets( );
+		TERMINAL::T_UINT64 NewTime = TERMINAL::GetTimeInMicroseconds( );
+		TERMINAL::T_UINT64 TimeDiff = NewTime - PreviousTime;
+		ListServer.Update( TimeDiff, nullptr );
+		GameServer.Update( TimeDiff, nullptr );
+		PreviousTime = NewTime;
 	}
 
-	Server.Terminate( );
+	ListServer.Terminate( );
 
 	return 0;
 }

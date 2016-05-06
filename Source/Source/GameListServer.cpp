@@ -3,8 +3,11 @@
 #include <arpa/inet.h>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <cstdio>
 #include <cstring>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace TERMINAL
 {
@@ -17,69 +20,6 @@ namespace TERMINAL
 	GameListServer::GameListServer( ) :
 		m_ClientToken( 1 )
 	{
-		// Populate the list with fake addresses
-		GAME_SERVER TestServer;
-
-		TestServer.IP = inet_addr( "192.168.2.1" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.2" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.3" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.4" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.5" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.6" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.7" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.8" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.9" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.10" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.11" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.12" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.13" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.14" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
-		TestServer.IP = inet_addr( "192.168.2.15" );
-		TestServer.Port = htons( 10002U );
-		m_ServerList.push_back( TestServer );
-
 		this->UpdateWebPage( );
 
 		// This should be moved into some kind of initialise member function
@@ -90,6 +30,28 @@ namespace TERMINAL
 	GameListServer::~GameListServer( )
 	{
 		MHD_stop_daemon( m_pDaemonHTTP );
+	}
+
+	T_UINT32 GameListServer::Initialise( const std::string &p_Address )
+	{
+		NetServer::Initialise( p_Address );
+
+		m_Socket = CreateUDPSocket( SOCKET_ADDRESS_FAMILY_INET );
+
+		// The IP address should be user-modifiable via a configuration file
+		NetSocketAddress Address( INADDR_ANY, htons( 50001 ) );
+
+		m_Socket->Bind( Address );
+
+		return 0;
+	}
+
+	T_UINT32 GameListServer::Update( T_UINT32 p_TimeDelta,
+		struct timeval *p_pTimeOut )
+	{
+		NetServer::Update( p_TimeDelta, p_pTimeOut );
+
+		return 1;
 	}
 
 
@@ -134,6 +96,69 @@ namespace TERMINAL
 
 				break;
 			}
+			case PACKET_TYPE_REGISTERSERVER:
+			{
+				std::cout << "Server requesting registration" << std::endl;
+
+				GAME_SERVER NewServer;
+
+				NewServer.IP = p_Address.GetIP( );
+				NewServer.Port = p_Address.GetPort( );
+				p_Message.ReadString( NewServer.Name );
+				NewServer.Players = p_Message.ReadUInt16( );
+				NewServer.MaxPlayers = p_Message.ReadUInt16( );
+				NewServer.Map = p_Message.ReadByte( );
+				NewServer.GameType = p_Message.ReadByte( );
+				NewServer.Scores[ 0 ] = p_Message.ReadUInt16( );
+				NewServer.Scores[ 1 ] = p_Message.ReadUInt16( );
+				NewServer.Scores[ 2 ] = p_Message.ReadUInt16( );
+				NewServer.Scores[ 3 ] = p_Message.ReadUInt16( );
+
+				std::cout << "Server information:" << std::endl;
+				char IP[ INET_ADDRSTRLEN ];
+				inet_ntop( AF_INET, &NewServer.IP, IP, INET_ADDRSTRLEN );
+				std::cout << "IP:        " << IP << std::endl;
+				std::cout << "Port:      " << ntohs( NewServer.Port ) <<
+					std::endl;
+				std::cout << "\tName:    " << NewServer.Name << std::endl;
+				std::cout << "\tPlayers: " << +NewServer.Players << "/" <<
+					+NewServer.MaxPlayers << std::endl;
+
+				// Find the server and update it if it's not present, otherwise
+				// add it
+				auto ServerItr = m_ServerList.begin( );
+				while( ServerItr != m_ServerList.end( ) )
+				{
+					if( ( NewServer.IP == ( *ServerItr ).IP ) &&
+						( NewServer.Port == ( *ServerItr ).Port ) )
+					{
+						GAME_SERVER &Server = ( *ServerItr );
+
+						Server.Name = NewServer.Name;
+						Server.Players = NewServer.Players;
+						Server.MaxPlayers = NewServer.MaxPlayers;
+						Server.Map = NewServer.Map;
+						Server.GameType = NewServer.GameType;
+						Server.Scores[ 0 ] = NewServer.Scores[ 0 ];
+						Server.Scores[ 1 ] = NewServer.Scores[ 1 ];
+						Server.Scores[ 2 ] = NewServer.Scores[ 2 ];
+						Server.Scores[ 3 ] = NewServer.Scores[ 3 ];
+
+						break;
+					}
+
+					++ServerItr;
+				}
+
+				if( ServerItr == m_ServerList.end( ) )
+				{
+					m_ServerList.push_back( NewServer );
+				}
+
+				this->UpdateWebPage( );
+
+				break;
+			}
 			default:
 			{
 				std::cout << "Unknown packet type: " << PacketType <<
@@ -162,7 +187,7 @@ namespace TERMINAL
 		while( p_StartPoint != m_ServerList.end( ) )
 		{
 			std::cout << "Sending server" << std::endl;
-			if( ( 1400 - List.GetSize( ) ) >= sizeof( GAME_SERVER ) )
+			if( ( 1400 - List.GetSize( ) ) >= GAME_SERVER_PACKET_SIZE )
 			{
 				// Write the server
 				List.WriteInt32( ( *p_StartPoint ).IP );
@@ -177,7 +202,7 @@ namespace TERMINAL
 		}
 
 		if( ( p_StartPoint == m_ServerList.end( ) ) &&
-			( ( 1400 - List.GetSize( ) ) >= sizeof( GAME_SERVER ) ) )
+			( ( 1400 - List.GetSize( ) ) >= GAME_SERVER_PACKET_SIZE ) )
 		{
 			std::cout << "Sending end of list" << std::endl;
 			// Send the end of list indicator
@@ -190,6 +215,7 @@ namespace TERMINAL
 
 	void GameListServer::UpdateWebPage( )
 	{
+
 		FILE *pWebPage;
 
 		pWebPage = fopen( "index.html.tmp", "w" );
@@ -198,6 +224,10 @@ namespace TERMINAL
 		WebPage << 
 			"<html><head><title>[TERMINAL] Game List Server</title></head>"
 			"<body>";
+		WebPage << "<div>[TERMINAL] Game List</div>";
+		WebPage << "<div><table>";
+		WebPage << "<tr><td>Address</td><td>Players</td>"
+			"<td>Max Players</td></tr>";
 
 		for( const GAME_SERVER &Server : m_ServerList )
 		{
@@ -205,18 +235,35 @@ namespace TERMINAL
 
 			inet_ntop( AF_INET, &Server.IP, Address, INET_ADDRSTRLEN );
 
-			WebPage << "Server: " <<  Address << ":" <<
-				htons( Server.Port ) << "<br/>";
+			WebPage << "<tr><td>" <<  Address << ":" <<
+				htons( Server.Port ) << "</td><td>" << +Server.Players <<
+				"</td><td>" << +Server.MaxPlayers << "</td></tr>";
 		}
+		WebPage << "</table></div>";
 
 		WebPage << "</body></html>";
 
-		fwrite( WebPage.str( ).c_str( ), WebPage.str( ).size( ), 1,
-			pWebPage );
+		fprintf( pWebPage, "%s", WebPage.str( ).c_str( ) );
 
 		fclose( pWebPage );
 
 		rename( "index.html.tmp", "index.html" );
+	}
+
+	static ssize_t GLS_ReadWebPage( void *p_pCls, uint64_t p_Position,
+		char *p_pBuffer, size_t p_Maximum )
+	{
+		FILE *pFile = ( FILE * )p_pCls;
+
+		fseek( pFile, p_Position, SEEK_SET );
+		return fread( p_pBuffer, 1, p_Maximum, pFile );
+	}
+
+	static void GLS_FreeWebPageCallback( void *p_pCls )
+	{
+		FILE *pFile = ( FILE * )p_pCls;
+
+		fclose( pFile );
 	}
 
 	static int GLS_AnswerConnection( void *p_pCls,
@@ -226,32 +273,21 @@ namespace TERMINAL
 		void **p_ppConCls )
 	{
 		FILE *pWebPageFile;
-		char *pWebPageContent;
-		long WebPageSize;
 
 		pWebPageFile = fopen( "index.html", "r" );
 
-		fseek( pWebPageFile, 0, SEEK_END );
-		WebPageSize = ftell( pWebPageFile );
-		rewind( pWebPageFile );
+		int FD = fileno( pWebPageFile );
+		struct stat FileStat;
 
-		pWebPageContent = new char [ WebPageSize + 1 ];
-		pWebPageContent[ WebPageSize ] = '\0';
+		fstat( FD, &FileStat );
 
-		fread( pWebPageContent, 1, WebPageSize, pWebPageFile );
+		struct MHD_Response *pResponse = MHD_create_response_from_callback(
+			FileStat.st_size, 32 * 1024, &GLS_ReadWebPage, pWebPageFile,
+			&GLS_FreeWebPageCallback );
 
-		struct MHD_Response *pResponse;
-		int Return;
-
-		pResponse = MHD_create_response_from_buffer( strlen( pWebPageContent ),
-			( void * )pWebPageContent, MHD_RESPMEM_PERSISTENT );
-
-		Return = MHD_queue_response( p_pConnection, MHD_HTTP_OK, pResponse );
+		int Return = MHD_queue_response( p_pConnection, MHD_HTTP_OK,
+			pResponse );
 		MHD_destroy_response( pResponse );
-
-		fclose( pWebPageFile );
-
-		delete [ ] pWebPageContent;
 
 		return Return;
 	}
