@@ -55,6 +55,7 @@ namespace TERMINAL
 
 		IDToClientMap					m_IDToClientMap;
 		NetSocketUDPPtr					m_Socket;
+		T_UINT64						m_ElapsedTime;
 
 	private:
 		class ReceivedPacket

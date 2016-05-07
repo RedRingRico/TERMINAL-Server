@@ -7,6 +7,7 @@
 namespace TERMINAL
 {
 	NetServer::NetServer( ) :
+		m_ElapsedTime( 0ULL ),
 		m_Port( 0 ),
 		m_Initialised( false )
 	{
@@ -59,7 +60,6 @@ namespace TERMINAL
 			}
 			else
 			{
-				std::cout << "Got a live one!" << std::endl;
 				// Reset the message so it is like new
 				ReceivedMessage.Reset( ReceivedBytes );
 				++ReceivedPacketCount;
@@ -73,7 +73,6 @@ namespace TERMINAL
 	{
 		if( m_PacketQueue.empty( ) == false )
 		{
-			std::cout << "Something in the qeueue" << std::endl;
 			ReceivedPacket &Next = m_PacketQueue.front( );
 
 			ProcessPacket( Next.GetMessage( ), Next.GetAddress( ) );
@@ -89,6 +88,8 @@ namespace TERMINAL
 		{
 			return -1;
 		}
+
+		m_ElapsedTime += p_TimeDelta;
 
 		//NetMessage Message;
 
@@ -123,8 +124,6 @@ namespace TERMINAL
 		m_Message( p_Message ),
 		m_Address( p_Address )
 	{
-		std::cout << "Set message to size: " << m_Message.GetSize( ) <<
-			std::endl;
 	}
 
 	const NetSocketAddress &NetServer::ReceivedPacket::GetAddress( ) const
