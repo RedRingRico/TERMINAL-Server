@@ -9,6 +9,9 @@
 namespace TERMINAL
 {
 	const T_MEMSIZE GAME_SERVER_PACKET_SIZE = 6;
+	// Eighty second time-out
+	const T_UINT64 GAME_SERVER_TIMEOUT = 80000000ULL;
+
 	struct GAME_SERVER
 	{
 		std::string	Name;
@@ -21,6 +24,8 @@ namespace TERMINAL
 		uint8_t		GameType;
 		// Assume 4 teams, this will most likely only be two, though
 		int16_t		Scores[ 4 ];
+		// If the server does not respond by this time-out, remove it
+		T_UINT64	ServerTimeOut;
 	};
 
 	typedef std::vector< GAME_SERVER > ServerList;

@@ -27,6 +27,8 @@ namespace TERMINAL
 
 		m_Socket->Bind( Address );
 
+		this->SendServerUpdate( );
+
 		return 0;
 	}
 
@@ -39,30 +41,9 @@ namespace TERMINAL
 		m_TimeSinceLastUpdate += p_TimeDelta;
 		
 		// One minute
-		if( m_TimeSinceLastUpdate > 10000000ULL )
+		if( m_TimeSinceLastUpdate > 60000000ULL )
 		{
-			T_BYTE MessageData[ MAX_PACKET_SIZE ];
-			std::cout << "Updating time" << std::endl;
-			m_TimeSinceLastUpdate = 0ULL;
-
-			NetMessage ServerInfo( MessageData, MAX_PACKET_SIZE );
-			ServerInfo.WriteUInt32( PACKET_TYPE_REGISTERSERVER );
-			ServerInfo.WriteString( m_Name );
-			ServerInfo.WriteUInt16( m_Players );
-			ServerInfo.WriteUInt16( m_MaxPlayers );
-			ServerInfo.WriteByte( 0 );
-			ServerInfo.WriteByte( 0 );
-			ServerInfo.WriteUInt16( 0 );
-			ServerInfo.WriteUInt16( 0 );
-			ServerInfo.WriteUInt16( 0 );
-			ServerInfo.WriteUInt16( 0 );
-
-			NetSocketAddressPtr ListServer =
-				NetSocketAddressFactory::CreateIPv4(
-					"list.dreamcast.live:50001" );
-
-			m_Socket->SendTo( ServerInfo.GetBuffer( ) , ServerInfo.GetSize( ),
-				*ListServer );
+			this->SendServerUpdate( );
 		}
 
 		return 0;
@@ -71,6 +52,31 @@ namespace TERMINAL
 	void GameServer::ProcessPacket( NetMessage &p_Message,
 		const NetSocketAddress &p_Address )
 	{
+	}
+
+	void GameServer::SendServerUpdate( )
+	{
+		T_BYTE MessageData[ MAX_PACKET_SIZE ];
+		m_TimeSinceLastUpdate = 0ULL;
+
+		NetMessage ServerInfo( MessageData, MAX_PACKET_SIZE );
+		ServerInfo.WriteUInt32( PACKET_TYPE_REGISTERSERVER );
+		ServerInfo.WriteString( m_Name );
+		ServerInfo.WriteUInt16( m_Players );
+		ServerInfo.WriteUInt16( m_MaxPlayers );
+		ServerInfo.WriteByte( 0 );
+		ServerInfo.WriteByte( 0 );
+		ServerInfo.WriteUInt16( 0 );
+		ServerInfo.WriteUInt16( 0 );
+		ServerInfo.WriteUInt16( 0 );
+		ServerInfo.WriteUInt16( 0 );
+
+		NetSocketAddressPtr ListServer =
+			NetSocketAddressFactory::CreateIPv4(
+				"list.dreamcast.live:50001" );
+
+		m_Socket->SendTo( ServerInfo.GetBuffer( ) , ServerInfo.GetSize( ),
+			*ListServer );
 	}
 }
 

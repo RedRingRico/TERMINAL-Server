@@ -19,6 +19,8 @@ namespace TERMINAL
 			const NetSocketAddress &p_Address ) override;
 
 	private:
+		void SendServerUpdate( );
+
 		std::string	m_Name;
 		T_UINT16	m_Players;
 		T_UINT16	m_MaxPlayers;

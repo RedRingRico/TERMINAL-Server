@@ -1,4 +1,5 @@
 #include <GameListServer.hpp>
+#include <Time.hpp>
 #include <iostream>
 #include <arpa/inet.h>
 #include <string>
@@ -51,6 +52,29 @@ namespace TERMINAL
 	{
 		NetServer::Update( p_TimeDelta, p_pTimeOut );
 
+		auto ServerItr = m_ServerList.begin( );
+		bool UpdateWebPage = false;
+
+		while( ServerItr != m_ServerList.end( ) )
+		{
+			GAME_SERVER &Server = ( *ServerItr );
+
+			if( Server.ServerTimeOut < m_ElapsedTime )
+			{
+				ServerItr = m_ServerList.erase( ServerItr );
+				UpdateWebPage = true;
+
+				continue;
+			}
+
+			++ServerItr;
+		}
+
+		if( UpdateWebPage == true )
+		{
+			this->UpdateWebPage( );
+		}
+
 		return 1;
 	}
 
@@ -65,7 +89,6 @@ namespace TERMINAL
 			case PACKET_TYPE_LISTREQUEST:
 			{
 				// Resend the welcome packet
-				std::cout << "Received list request" << std::endl;
 				GAME_SERVER Seed;
 
 				// Determine where to start in the game list
@@ -79,8 +102,6 @@ namespace TERMINAL
 
 				if( ( Seed.IP != 0 ) && ( Seed.Port != 0 ) )
 				{
-					std::cout << "Sending servers" << std::endl;
-
 					while( ListStart != m_ServerList.end( ) )
 					{
 						if( ( *ListStart ).IP == Seed.IP
@@ -98,8 +119,6 @@ namespace TERMINAL
 			}
 			case PACKET_TYPE_REGISTERSERVER:
 			{
-				std::cout << "Server requesting registration" << std::endl;
-
 				GAME_SERVER NewServer;
 
 				NewServer.IP = p_Address.GetIP( );
@@ -113,16 +132,8 @@ namespace TERMINAL
 				NewServer.Scores[ 1 ] = p_Message.ReadUInt16( );
 				NewServer.Scores[ 2 ] = p_Message.ReadUInt16( );
 				NewServer.Scores[ 3 ] = p_Message.ReadUInt16( );
-
-				std::cout << "Server information:" << std::endl;
-				char IP[ INET_ADDRSTRLEN ];
-				inet_ntop( AF_INET, &NewServer.IP, IP, INET_ADDRSTRLEN );
-				std::cout << "IP:        " << IP << std::endl;
-				std::cout << "Port:      " << ntohs( NewServer.Port ) <<
-					std::endl;
-				std::cout << "\tName:    " << NewServer.Name << std::endl;
-				std::cout << "\tPlayers: " << +NewServer.Players << "/" <<
-					+NewServer.MaxPlayers << std::endl;
+				NewServer.ServerTimeOut = m_ElapsedTime +
+					GAME_SERVER_TIMEOUT;
 
 				// Find the server and update it if it's not present, otherwise
 				// add it
@@ -143,6 +154,7 @@ namespace TERMINAL
 						Server.Scores[ 1 ] = NewServer.Scores[ 1 ];
 						Server.Scores[ 2 ] = NewServer.Scores[ 2 ];
 						Server.Scores[ 3 ] = NewServer.Scores[ 3 ];
+						Server.ServerTimeOut = NewServer.ServerTimeOut;
 
 						break;
 					}
