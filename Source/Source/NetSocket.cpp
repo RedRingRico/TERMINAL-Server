@@ -55,7 +55,6 @@ namespace TERMINAL
 		
 		if( ReceivedBytes >= 0 )
 		{
-			std::cout << "Got " << ReceivedBytes << " bytes" << std::endl;
 			return ReceivedBytes;
 		}
 		else
