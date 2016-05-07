@@ -221,13 +221,19 @@ namespace TERMINAL
 		pWebPage = fopen( "index.html.tmp", "w" );
 
 		std::stringstream WebPage;
-		WebPage << 
-			"<html><head><title>[TERMINAL] Game List Server</title></head>"
-			"<body>";
-		WebPage << "<div>[TERMINAL] Game List</div>";
-		WebPage << "<div><table>";
-		WebPage << "<tr><td>Address</td><td>Players</td>"
-			"<td>Max Players</td></tr>";
+		WebPage << "<!DOCTYPE html>"
+			"<html><head><title>[TERMINAL] | Game List Server</title>"
+			"<link href='https://fonts.googleapis.com/css?family=Audiowide' "
+			"rel='stylesheet' type='text/css'>"
+			"<style type=text/css>body{color:#53FEFF}"
+			"@font-face{font-family:WhiteRabbit;src: url('whitrabt.ttf');}"
+			"div{font-family:AudioWide;text-align:center;}"
+			"td{text-align:left}</style></head>"
+			"<body bgcolor='#111111'>";
+		WebPage << "<div>[TERMINAL] | Game List</div>";
+		WebPage << "<br/><br/>";
+		WebPage << "<div><table style='width:100%'>";
+		WebPage << "<tr><td>Name</td><td>Address</td><td>Players</td></tr>";
 
 		for( const GAME_SERVER &Server : m_ServerList )
 		{
@@ -235,9 +241,10 @@ namespace TERMINAL
 
 			inet_ntop( AF_INET, &Server.IP, Address, INET_ADDRSTRLEN );
 
-			WebPage << "<tr><td>" <<  Address << ":" <<
+			WebPage << "<tr><td>" << Server.Name << "</td>"
+				"<td>" <<  Address << ":" <<
 				htons( Server.Port ) << "</td><td>" << +Server.Players <<
-				"</td><td>" << +Server.MaxPlayers << "</td></tr>";
+				"/" << +Server.MaxPlayers << "</td></tr>";
 		}
 		WebPage << "</table></div>";
 
