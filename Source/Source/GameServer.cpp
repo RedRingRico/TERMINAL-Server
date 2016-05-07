@@ -5,6 +5,9 @@
 namespace TERMINAL
 {
 	GameServer::GameServer( ) :
+		m_Name( "UNKNOWN" ),
+		m_Players( 0 ),
+		m_MaxPlayers( 0 ),
 		m_TimeSinceLastUpdate( 0ULL )
 	{
 	}
@@ -44,10 +47,7 @@ namespace TERMINAL
 
 			NetMessage ServerInfo( MessageData, MAX_PACKET_SIZE );
 			ServerInfo.WriteUInt32( PACKET_TYPE_REGISTERSERVER );
-			m_Name = "TEST SERVER";
 			ServerInfo.WriteString( m_Name );
-			m_Players = 2;
-			m_MaxPlayers = 16;
 			ServerInfo.WriteUInt16( m_Players );
 			ServerInfo.WriteUInt16( m_MaxPlayers );
 			ServerInfo.WriteByte( 0 );
