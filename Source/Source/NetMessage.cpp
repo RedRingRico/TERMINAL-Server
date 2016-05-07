@@ -29,8 +29,6 @@ namespace TERMINAL
 	{
 		m_pData = new T_BYTE[ m_MaxSize ];
 		memcpy( m_pData, p_Other.m_pData, m_MaxSize );
-		std::cout << "Created message buffer of " << m_MaxSize << " bytes" <<
-			std::endl;
 	}
 
 	NetMessage::~NetMessage( )
