@@ -4,6 +4,7 @@
 #include <GameServer.hpp>
 #include <Time.hpp>
 #include <vector>
+#include <cstring>
 #include <unistd.h>
 
 void PrintUsage( );
@@ -51,12 +52,55 @@ int main( int p_Argc, char **p_ppArgv )
 	std::cout << "\tLobby" << std::endl;
 	std::cout << "\tGame" << std::endl;
 
+	for( int Cmd = 1; Cmd < p_Argc; ++Cmd )
+	{
+		if( ( p_ppArgv[ Cmd ][ 0 ] == '-' ) &&
+			( p_ppArgv[ Cmd ][ 1 ] != '-' ) )
+		{
+			size_t ArgIndex = 1;
 
-	TERMINAL::GameListServer ListServer;
-	TERMINAL::GameServer GameServer;
+			while( p_ppArgv[ Cmd ][ ArgIndex ] != '\0' )
+			{
+				char ArgChar = p_ppArgv[ Cmd ][ ArgIndex ];
 
-	ListServer.Initialise( "IGNORE" );
-	GameServer.Initialise( "" );
+				if( ArgChar == 'g' )
+				{
+					TERMINAL::NetServer *pServer = new TERMINAL::GameServer( );
+					Servers.push_back( pServer );
+				}
+				if( ArgChar == 'l' )
+				{
+					TERMINAL::NetServer *pServer =
+						new TERMINAL::GameListServer( );
+					Servers.push_back( pServer );
+				}
+
+				++ArgIndex;
+			}
+		}
+		else // Doube-tack version
+		{
+			if( strcmp( "--gameserver", p_ppArgv[ Cmd ] ) == 0 )
+			{
+				TERMINAL::NetServer *pServer = new TERMINAL::GameServer( );
+				Servers.push_back( pServer );
+			}
+
+			if( strcmp( "--listserver", p_ppArgv[ Cmd ] ) == 0 )
+			{
+				TERMINAL::NetServer *pServer = new TERMINAL::GameListServer( );
+				Servers.push_back( pServer );
+			}
+		}
+	}
+
+	auto Server = Servers.begin( );
+
+	while( Server != Servers.end( ) )
+	{
+		( *Server )->Initialise( "??" );
+		++Server;
+	}
 
 	TERMINAL::T_UINT64 PreviousTime = TERMINAL::GetTimeInMicroseconds( );
 
@@ -64,12 +108,24 @@ int main( int p_Argc, char **p_ppArgv )
 	{
 		TERMINAL::T_UINT64 NewTime = TERMINAL::GetTimeInMicroseconds( );
 		TERMINAL::T_UINT64 TimeDiff = NewTime - PreviousTime;
-		ListServer.Update( TimeDiff, nullptr );
-		GameServer.Update( TimeDiff, nullptr );
+
+		auto Server = Servers.begin( );
+
+		while( Server != Servers.end( ) )
+		{
+			( *Server )->Update( TimeDiff, nullptr );
+			++Server;
+		}
+
 		PreviousTime = NewTime;
 	}
 
-	ListServer.Terminate( );
+	while( Server != Servers.end( ) )
+	{
+		( *Server )->Terminate( );
+		delete ( *Server );
+		++Server;
+	}
 
 	return 0;
 }
@@ -88,9 +144,12 @@ void PrintUsage( )
 	std::cout << "In order to successfully deploy this program, you will need "
 		"to select one of " << std::endl << "two services with the "
 		"following:" << std::endl;
-	std::cout << "Flag | Description" << std::endl;
-	std::cout << "-g     Starts a game server" << std::endl;
-	std::cout << "-l     Starts a game list server" << std::endl << std::endl;
+	std::cout << "Flag          Description" << std::endl;
+	std::cout << "-------------------------" << std::endl;
+	std::cout << "--gameserver  Starts a game server" << std::endl;
+	std::cout << "-g" << std::endl;
+	std::cout << "--listserver  Starts a game list server" << std::endl;
+	std::cout << "-l" << std::endl << std::endl;
 
 	std::cout << "That is all.  Good day to you." << std::endl << std::endl;
 }
