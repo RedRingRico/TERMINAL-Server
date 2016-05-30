@@ -6,14 +6,16 @@ namespace TERMINAL
 {
 	GameServer::GameServer( ) :
 		m_Name( "UNKNOWN" ),
-		m_Players( 0 ),
-		m_MaxPlayers( 0 ),
+		m_NextEntityIndex( 0UL ),
+		m_Players( 0U ),
+		m_MaxPlayers( 0U ),
 		m_TimeSinceLastUpdate( 0ULL )
 	{
 	}
 
 	GameServer::~GameServer( )
 	{
+		this->Unregister( );
 	}
 
 	T_UINT32 GameServer::Initialise( const std::string &p_Address )
@@ -52,6 +54,20 @@ namespace TERMINAL
 	void GameServer::ProcessPacket( NetMessage &p_Message,
 		const NetSocketAddress &p_Address )
 	{
+		auto Client = m_AddressToClientMap.find( p_Address );
+
+		std::cout << "Got a new packet" << std::endl;
+
+		if( Client == m_AddressToClientMap.end( ) )
+		{
+			std::cout << "New client" << std::endl;
+			this->HandlePacketFromNewClient( p_Message, p_Address );
+		}
+		else
+		{
+			std::cout << "Known client" << std::endl;
+			this->ProcessPacket( ( *Client ).second, p_Message );
+		}
 	}
 
 	void GameServer::SendServerUpdate( )
@@ -73,7 +89,88 @@ namespace TERMINAL
 
 		NetSocketAddressPtr ListServer =
 			NetSocketAddressFactory::CreateIPv4(
-				"list.dreamcast.live:50001" );
+#if defined ( TERMINAL_BUILD_DEBUG )
+				"dev.list.dreamcast.live:50001"
+#else
+				"list.dreamcast.live:50001"
+#endif // TERMINAL_BUILD_DEBUG
+				);
+
+		m_Socket->SendTo( ServerInfo.GetBuffer( ) , ServerInfo.GetSize( ),
+			*ListServer );
+	}
+
+	void GameServer::ProcessPacket( NetProxyClientPtr p_pClient,
+		NetMessage &p_Message )
+	{
+		T_UINT32 PacketType = p_Message.ReadUInt32( );
+
+		switch( PacketType )
+		{
+			case PACKET_TYPE_CLIENTJOIN:
+			{
+				this->SendWelcomePacket( p_pClient );
+
+				break;
+			}
+			default:
+			{
+				std::cout << "Unknown packet received: 0x" << std::hex <<
+					PacketType << std::dec << std::endl;
+			}
+		}
+	}
+
+	void GameServer::HandlePacketFromNewClient( NetMessage &p_Message,
+		const NetSocketAddress &p_Address )
+	{
+		T_UINT32 PacketType = p_Message.ReadUInt32( );
+
+		if( PacketType == PACKET_TYPE_CLIENTJOIN )
+		{
+			std::string PlayerName;
+			p_Message.ReadString( PlayerName );
+
+			NetProxyClientPtr NewClient = std::make_shared< NetProxyClient >(
+				p_Address, PlayerName, m_NextEntityIndex++ );
+
+			m_AddressToClientMap[ p_Address ] = NewClient;
+			m_IDToClientMap[ NewClient->GetID( ) ] = NewClient;
+
+			this->SendWelcomePacket( NewClient );
+		}
+		else
+		{
+			std::cout << "Bad packet from unknown client" << std::endl;
+		}
+	}
+
+	void GameServer::SendWelcomePacket( NetProxyClientPtr p_pClient )
+	{
+		NetMessage NewClient( nullptr, 1400 );
+
+		NewClient.WriteUInt32( PACKET_TYPE_CLIENTWELCOME );
+		NewClient.WriteUInt32( p_pClient->GetID( ) );
+
+		this->SendPacket( NewClient, p_pClient->GetSocketAddress( ) );
+	}
+
+	void GameServer::Unregister( )
+	{
+		T_BYTE MessageData[ MAX_PACKET_SIZE ];
+		m_TimeSinceLastUpdate = 0ULL;
+
+		NetMessage ServerInfo( MessageData, MAX_PACKET_SIZE );
+		ServerInfo.WriteUInt32( PACKET_TYPE_UNREGISTERSERVER );
+
+		NetSocketAddressPtr ListServer =
+			NetSocketAddressFactory::CreateIPv4(
+#if defined ( TERMINAL_BUILD_DEBUG )
+				"dev.list.dreamcast.live:50001"
+#else
+				"list.dreamcast.live:50001"
+#endif // TERMINAL_BUILD_DEBUG
+				);
 
 		m_Socket->SendTo( ServerInfo.GetBuffer( ) , ServerInfo.GetSize( ),
 			*ListServer );

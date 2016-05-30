@@ -48,9 +48,6 @@ int main( int p_Argc, char **p_ppArgv )
 	}
 
 	std::cout << "Configured for the following services:" << std::endl;
-	std::cout << "\tAuthentication" << std::endl;
-	std::cout << "\tLobby" << std::endl;
-	std::cout << "\tGame" << std::endl;
 
 	for( int Cmd = 1; Cmd < p_Argc; ++Cmd )
 	{
@@ -67,12 +64,14 @@ int main( int p_Argc, char **p_ppArgv )
 				{
 					TERMINAL::NetServer *pServer = new TERMINAL::GameServer( );
 					Servers.push_back( pServer );
+					std::cout << "\tGame" << std::endl;
 				}
 				if( ArgChar == 'l' )
 				{
 					TERMINAL::NetServer *pServer =
 						new TERMINAL::GameListServer( );
 					Servers.push_back( pServer );
+					std::cout << "\tGame List" << std::endl;
 				}
 
 				++ArgIndex;
@@ -84,12 +83,14 @@ int main( int p_Argc, char **p_ppArgv )
 			{
 				TERMINAL::NetServer *pServer = new TERMINAL::GameServer( );
 				Servers.push_back( pServer );
+				std::cout << "\tGame" << std::endl;
 			}
 
 			if( strcmp( "--listserver", p_ppArgv[ Cmd ] ) == 0 )
 			{
 				TERMINAL::NetServer *pServer = new TERMINAL::GameListServer( );
 				Servers.push_back( pServer );
+				std::cout << "\tGame List" << std::endl;
 			}
 		}
 	}
@@ -120,8 +121,11 @@ int main( int p_Argc, char **p_ppArgv )
 		PreviousTime = NewTime;
 	}
 
+	Server = Servers.begin( );
+
 	while( Server != Servers.end( ) )
 	{
+		std::cout << "Deleting server" << std::endl;
 		( *Server )->Terminate( );
 		delete ( *Server );
 		++Server;

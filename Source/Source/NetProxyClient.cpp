@@ -24,9 +24,9 @@ namespace TERMINAL
 		return m_ID;
 	}
 
-	/*const std::string &GetName( ) const
+	const std::string &NetProxyClient::GetName( ) const
 	{
 		return m_Name;
-	}*/
+	}
 }
 

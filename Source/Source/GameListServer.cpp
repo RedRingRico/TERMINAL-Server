@@ -171,11 +171,35 @@ namespace TERMINAL
 
 				break;
 			}
+			case PACKET_TYPE_UNREGISTERSERVER:
+			{
+				auto ServerItr = m_ServerList.begin( );
+				bool UpdateWebPage = false;
+
+				while( ServerItr != m_ServerList.end( ) )
+				{
+					if( ( p_Address.GetIP( ) == ( *ServerItr ).IP ) &&
+						( p_Address.GetPort( ) == ( *ServerItr ).Port ) )
+					{
+						m_ServerList.erase( ServerItr );
+						UpdateWebPage = true;
+						break;
+					}
+
+					++ServerItr;
+				}
+
+				if( UpdateWebPage == true )
+				{
+					this->UpdateWebPage( );
+				}
+				
+				break;
+			}
 			default:
 			{
-				std::cout << "Unknown packet type: " << PacketType <<
-					std::endl;
-				break;
+				std::cout << "Unknown packet received: 0x" << std::hex <<
+					PacketType << std::dec << std::endl;
 			}
 		}
 	}

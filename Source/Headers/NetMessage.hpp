@@ -13,9 +13,18 @@ namespace TERMINAL
 	const T_SINT8 TMESSAGE_REMOVECLIENT	= -103;
 	const T_SINT8 TMESSAGE_PING			= -104;
 
+	// Request for the game server list
 	const T_UINT32 PACKET_TYPE_LISTREQUEST		= 0x00000100;
+	// Tells the client about the servers available
 	const T_UINT32 PACKET_TYPE_LISTRESPONSE		= 0x00000101;
+	// Game server requesting to be on the list
 	const T_UINT32 PACKET_TYPE_REGISTERSERVER	= 0x00011100;
+	// Game server quit
+	const T_UINT32 PACKET_TYPE_UNREGISTERSERVER	= 0x00011101;
+	// Client join request
+	const T_UINT32 PACKET_TYPE_CLIENTJOIN		= 0x00011000;
+	// Welcome the client
+	const T_UINT32 PACKET_TYPE_CLIENTWELCOME	= 0x00010110;
 
 	// Forward declarations
 	class NetClient;

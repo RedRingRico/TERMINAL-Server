@@ -2,6 +2,8 @@
 #define __TERMINAL_GAMESERVER_HPP__
 
 #include <NetServer.hpp>
+#include <NetSocketAddress.hpp>
+#include <NetProxyClient.hpp>
 
 namespace TERMINAL
 {
@@ -19,12 +21,27 @@ namespace TERMINAL
 			const NetSocketAddress &p_Address ) override;
 
 	private:
+		typedef std::unordered_map< T_UINT32, NetProxyClientPtr >
+			IDToClientMap;
+		typedef std::unordered_map< NetSocketAddress, NetProxyClientPtr >
+			AddressToClientMap;
+
 		void SendServerUpdate( );
+		void ProcessPacket( NetProxyClientPtr p_pClient,
+			NetMessage &p_Message );
+		void HandlePacketFromNewClient( NetMessage &p_Message,
+			const NetSocketAddress &p_Address );
+		void SendWelcomePacket( NetProxyClientPtr p_pClient );
+		void Unregister( );
 
 		std::string	m_Name;
+		T_UINT32	m_NextEntityIndex;
 		T_UINT16	m_Players;
 		T_UINT16	m_MaxPlayers;
 		T_UINT64	m_TimeSinceLastUpdate;
+
+		IDToClientMap		m_IDToClientMap;
+		AddressToClientMap	m_AddressToClientMap;
 	};
 }
 
