@@ -8,7 +8,7 @@ namespace TERMINAL
 		m_Name( "UNKNOWN" ),
 		m_NextEntityIndex( 0UL ),
 		m_Players( 0U ),
-		m_MaxPlayers( 0U ),
+		m_MaxPlayers( 16U ),
 		m_TimeSinceLastUpdate( 0ULL )
 	{
 	}
@@ -113,6 +113,10 @@ namespace TERMINAL
 
 				break;
 			}
+			case PACKET_TYPE_CLIENTLEAVE:
+			{
+				break;
+			}
 			default:
 			{
 				std::cout << "Unknown packet received: 0x" << std::hex <<
@@ -128,6 +132,12 @@ namespace TERMINAL
 
 		if( PacketType == PACKET_TYPE_CLIENTJOIN )
 		{
+			if( m_Players >= m_MaxPlayers )
+			{
+				// Tell the client that they cannot join, too many players
+				return;
+			}
+
 			std::string PlayerName;
 			p_Message.ReadString( PlayerName );
 
@@ -137,7 +147,10 @@ namespace TERMINAL
 			m_AddressToClientMap[ p_Address ] = NewClient;
 			m_IDToClientMap[ NewClient->GetID( ) ] = NewClient;
 
+			++m_Players;
+
 			this->SendWelcomePacket( NewClient );
+			this->SendServerUpdate( );
 		}
 		else
 		{
